@@ -23,6 +23,8 @@ struct ContactEstimation : public mc_observers::Observer
 
 protected:
 
+  void computeKnownContacts(const mc_rbdyn::Robot & robot, const Eigen::MatrixXd & H , const Eigen::VectorXd & C, const std::vector<mc_rbdyn::Contact> & contacts ,rbd::MultiBodyConfig & mbc);
+
   Eigen::VectorXd flatten(const std::vector<std::vector<double>> & vec);
 
   Eigen::VectorXd gravityTorque(const rbd::MultiBody & mb, rbd::MultiBodyConfig mbc);
@@ -32,6 +34,8 @@ protected:
   Eigen::VectorXd measuredContactTorque(const std::string & frame,const mc_rbdyn::Robot & robot);
 
   std::vector<sva::ForceVecd> contactWrench(const mc_rbdyn::Robot & robot, const std::vector<std::string> & frame, const std::vector<sva::PTransformd> & offsets);
+
+  sva::ForceVecd contactWrenchSum(const mc_rbdyn::Robot & robot,const std::string & frame, const sva::PTransformd & offsets);
 
   std::vector<std::vector<double>> unFlatten(const Eigen::VectorXd & vec , const rbd::MultiBody & mb);
 
@@ -67,10 +71,11 @@ protected:
 
   double gainInt_ = 1.;
   double gainExt_ = 1.;
-  double t_int = 10;
+
   Eigen::VectorXd integralsInt_;
   Eigen::VectorXd residualsInt_ ;
 
+  Eigen::MatrixXd mat;
 
   sva::ForceVecd measuredContactsSum_= sva::ForceVecd::Zero();
 
