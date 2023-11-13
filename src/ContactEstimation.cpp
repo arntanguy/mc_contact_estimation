@@ -141,9 +141,9 @@ bool ContactEstimation::run(const mc_control::MCController & ctl)
 
 void ContactEstimation::update(mc_control::MCController & ctl)
 {
-  if(!ctl.datastore().has("ContactEstimation::ContactWrench"))
+  if(!ctl.datastore().has("ContactEstimation::contactWrench"))
   {
-    ctl.datastore().make_call("ContactEstimation::ContactWrench",
+    ctl.datastore().make_call("ContactEstimation::contactWrench",
       [this](const mc_rbdyn::Robot & robot,const std::vector<std::string> & frame, const std::vector<sva::PTransformd> & offsets) -> std::vector<sva::ForceVecd>
       {
         return contactWrench(robot,frame,offsets);
