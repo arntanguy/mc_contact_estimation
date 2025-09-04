@@ -1,7 +1,6 @@
 #include <mc_control/MCController.h>
 #include <mc_observers/ObserverMacros.h>
 #include "../include/mc_contact_estimation/ContactEstimation.h"
-#include <mc_state_observation/gui_helpers.h>
 #include "eigen-quadprog/QuadProg.h"
 #include "eigen-quadprog/eigen_quadprog_api.h"
 #include <RBDyn/ID.h>
@@ -11,7 +10,7 @@
 #include <RBDyn/FA.h>
 #include <RBDyn/Coriolis.h>
 #include <RBDyn/Jacobian.h>
-#include <Eigen/QR> 
+#include <Eigen/QR>
 
 namespace mc_state_observation
 {
@@ -85,13 +84,13 @@ bool ContactEstimation::run(const mc_control::MCController & ctl)
   id.inverseDynamics(robot.mb(),mbc);
   auto C_mat = coriolis.coriolis(robot.mb(),mbc);
 
-  
-  
+
+
 
   const Eigen::MatrixXd H_fb = (mat * H).block(6,6,n-6,n-6);
   const Eigen::VectorXd C_fb = (mat * C).segment(6,n-6);
   const Eigen::Vector6d p_0c = C.segment(0,6);
-  
+
   sva::MotionVecd a_0(Eigen::Vector3d::Zero(), mbc.gravity);
   const sva::PTransformd & X_p_i = mbc.parentToSon[0];
 
@@ -107,7 +106,7 @@ bool ContactEstimation::run(const mc_control::MCController & ctl)
 
   const Eigen::MatrixXd H_fb_dot = Hdot - Fdot.transpose() * I_0c_inv * F - FT_Iinv_ * Fdot - Fdot.transpose() * (-I_0c_inv * I_0c_dot * I_0c_inv) * F;
 
-  const auto tau_tot =flatten(mbc.jointTorque);  
+  const auto tau_tot =flatten(mbc.jointTorque);
 
 
   Eigen::VectorXd tau_c = Eigen::VectorXd::Zero(n);
@@ -238,12 +237,12 @@ Eigen::VectorXd ContactEstimation::measuredContactTorque(const std::string & fra
   const sva::PTransformd & X_0_f = robot.frame(frame).position();
   const std::string & body_name = robot.frame(frame).body();
   const sva::PTransformd X_0_b = robot.mbc().bodyPosW[robot.mb().bodyIndexByName(body_name)];
-  
+
   const sva::ForceVecd force = robot.frame(frame).wrench();
   auto jac = rbd::Jacobian(robot.mb(),body_name);
   auto Jlocal = jac.bodyJacobian(robot.mb(),robot.mbc());
   jac.fullJacobian(robot.mb(),Jlocal,J);
-  
+
   return J.transpose() * ((X_0_b * X_0_f.inv()).dualMul(force)).vector();
 
 
@@ -251,7 +250,7 @@ Eigen::VectorXd ContactEstimation::measuredContactTorque(const std::string & fra
 
 std::vector<sva::ForceVecd> ContactEstimation::contactWrench(const mc_rbdyn::Robot & robot,const std::vector<std::string> & frame, const std::vector<sva::PTransformd> & offsets)
 {
-  const int ndof = robot.mb().nrDof(); 
+  const int ndof = robot.mb().nrDof();
   const sva::PTransformd X_0_fb = robot.posW();
 
   Eigen::MatrixXd J = Eigen::MatrixXd::Zero(ndof,6 * frame.size());
@@ -297,7 +296,7 @@ sva::ForceVecd ContactEstimation::contactWrenchSum(const mc_rbdyn::Robot & robot
   const sva::PTransformd & X_0_f = robot.frame(frame).position();
 
   return  (offset * X_0_f * (( X_0_fb ).inv()) ).dualMul(sva::ForceVecd(residualsExt_)) ;
-  
+
 }
 
 void ContactEstimation::computeKnownContacts(const mc_rbdyn::Robot & robot, const Eigen::MatrixXd & H , const Eigen::VectorXd & C, const std::vector<mc_rbdyn::Contact> & contacts ,rbd::MultiBodyConfig & mbc)
@@ -318,7 +317,7 @@ void ContactEstimation::computeKnownContacts(const mc_rbdyn::Robot & robot, cons
 
   for(auto & c : contacts)
   {
-   
+
     const sva::PTransformd X_0_s = c.r1Surface()->X_0_s(robot);
 
     Aeq.block(0,6 * count,6,6) = (X_0_fb * X_0_s.inv()).dualMatrix();
@@ -348,30 +347,30 @@ void ContactEstimation::computeKnownContacts(const mc_rbdyn::Robot & robot, cons
 }
 
 void ContactEstimation::addToLogger(const mc_control::MCController &,
-                                   mc_rtc::Logger & logger,
-                                   const std::string & category)
+                                   mc_rtc::Logger & /* logger */,
+                                   const std::string & /* category */)
 {
-  
+
 }
 
-void ContactEstimation::removeFromLogger(mc_rtc::Logger & logger, const std::string & category)
+void ContactEstimation::removeFromLogger(mc_rtc::Logger & /* logger */, const std::string & /* category */)
 {
- 
+
 }
 
-void ContactEstimation::addToGUI(const mc_control::MCController & ctl,
+void ContactEstimation::addToGUI(const mc_control::MCController & /* ctl */,
                                 mc_rtc::gui::StateBuilder & gui,
                                 const std::vector<std::string> & category)
 {
   gui.addElement(category,
-                  mc_rtc::gui::NumberInput("Gain Int",[this]() -> const double {return gainInt_;}, [this](const double i){gainInt_ = i;}),
-                  mc_rtc::gui::NumberInput("Gain Ext",[this]() -> const double {return gainExt_;}, [this](const double i){gainExt_ = i;}),
-                  mc_rtc::gui::Label("Residuals Int norm",[this]() -> const std::string {return std::to_string(residualsInt_.norm());}),     
-                  mc_rtc::gui::ArrayInput("Residuals Ext",{"cx","cy","cz","fx","fy","fz"},[this]() -> Eigen::Vector6d
+                  mc_rtc::gui::NumberInput("Gain Int",[this]() -> double {return gainInt_;}, [this](const double i){gainInt_ = i;}),
+                  mc_rtc::gui::NumberInput("Gain Ext",[this]() -> double {return gainExt_;}, [this](const double i){gainExt_ = i;}),
+                  mc_rtc::gui::Label("Residuals Int norm",[this]() -> const std::string {return std::to_string(residualsInt_.norm());}),
+                  mc_rtc::gui::ArrayInput("Residuals Ext",{"cx","cy","cz","fx","fy","fz"},[this]() -> const Eigen::Vector6d &
                                                                             {
                                                                               return residualsExt_;
                                                                             },
-                                                                            [this](const Eigen::Vector6d & t) {}
+                                                                            [](const Eigen::Vector6d & /* t */) {}
                                                                             ));
 }
 
